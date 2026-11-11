@@ -283,9 +283,7 @@ export function loadTomlOptional(file) {
     catch (error) {
         if (error instanceof TomlError) {
             const message = (error.message.split("\n")[0] ?? "").replace(/^Invalid TOML document: /, "");
-            return Promise.reject, (() => {
-                throw parseError(file, "TOML", error.line, error.column, message.trim(), error);
-            })();
+            throw parseError(file, "TOML", error.line, error.column, message.trim(), error);
         }
         throw error;
     }

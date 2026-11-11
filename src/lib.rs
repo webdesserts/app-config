@@ -342,7 +342,11 @@ pub fn resolve_write_target(path: impl AsRef<Path>) -> Result<PathBuf> {
 /// Atomically replaces the file behind `path` (following symlinks, so a dotfiles
 /// symlink stays a symlink). The temp file is created `O_EXCL` with its final mode:
 /// `mode` if given, else the existing target's mode, else `0o644`.
-pub fn write_atomic(path: impl AsRef<Path>, bytes: impl AsRef<[u8]>, mode: Option<u32>) -> Result<()> {
+pub fn write_atomic(
+    path: impl AsRef<Path>,
+    bytes: impl AsRef<[u8]>,
+    mode: Option<u32>,
+) -> Result<()> {
     write_atomic_impl(path.as_ref(), bytes.as_ref(), mode)
 }
 
@@ -454,7 +458,9 @@ pub fn load_toml_optional<T: DeserializeOwned>(path: impl AsRef<Path>) -> Result
         return Ok(None);
     };
     toml::from_str(&text).map(Some).map_err(|err| {
-        let (line, column) = err.span().map_or((1, 1), |span| line_col(&text, span.start));
+        let (line, column) = err
+            .span()
+            .map_or((1, 1), |span| line_col(&text, span.start));
         AppConfigError::Parse {
             path: path.to_path_buf(),
             format: Format::Toml,
@@ -485,7 +491,10 @@ pub fn save_toml_atomic<T: Serialize + ?Sized>(path: impl AsRef<Path>, value: &T
 }
 
 /// Serializes `value` as TOML and [`write_secret_atomic`]s it (`0o600`).
-pub fn save_secret_toml_atomic<T: Serialize + ?Sized>(path: impl AsRef<Path>, value: &T) -> Result<()> {
+pub fn save_secret_toml_atomic<T: Serialize + ?Sized>(
+    path: impl AsRef<Path>,
+    value: &T,
+) -> Result<()> {
     let path = path.as_ref();
     write_secret_atomic(path, to_toml(path, value)?)
 }
@@ -516,11 +525,12 @@ pub fn load_json_optional<T: DeserializeOwned>(path: impl AsRef<Path>) -> Result
 /// Serializes `value` as pretty JSON (trailing newline) and [`write_atomic`]s it.
 pub fn save_json_atomic<T: Serialize + ?Sized>(path: impl AsRef<Path>, value: &T) -> Result<()> {
     let path = path.as_ref();
-    let mut text = serde_json::to_string_pretty(value).map_err(|err| AppConfigError::Serialize {
-        path: path.to_path_buf(),
-        format: Format::Json,
-        message: err.to_string(),
-    })?;
+    let mut text =
+        serde_json::to_string_pretty(value).map_err(|err| AppConfigError::Serialize {
+            path: path.to_path_buf(),
+            format: Format::Json,
+            message: err.to_string(),
+        })?;
     text.push('\n');
     write_atomic(path, text, None)
 }

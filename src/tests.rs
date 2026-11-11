@@ -87,13 +87,31 @@ fn golden_parse_errors() {
             "toml" => load_toml_optional::<Anything>(&path).unwrap_err(),
             _ => load_json_optional::<Value>(&path).unwrap_err(),
         };
-        let AppConfigError::Parse { path: at, line, column, .. } = &err else {
+        let AppConfigError::Parse {
+            path: at,
+            line,
+            column,
+            ..
+        } = &err
+        else {
             panic!("{name}: expected Parse, got {err}");
         };
         assert_eq!(at, &path, "{name}");
-        assert_eq!(Some(*line as u64), case["line"].as_u64(), "{name}: line ({err})");
-        assert_eq!(Some(*column as u64), case["column"].as_u64(), "{name}: column ({err})");
-        assert!(err.to_string().starts_with(&format!("{}:{line}:{column}: ", path.display())), "{err}");
+        assert_eq!(
+            Some(*line as u64),
+            case["line"].as_u64(),
+            "{name}: line ({err})"
+        );
+        assert_eq!(
+            Some(*column as u64),
+            case["column"].as_u64(),
+            "{name}: column ({err})"
+        );
+        assert!(
+            err.to_string()
+                .starts_with(&format!("{}:{line}:{column}: ", path.display())),
+            "{err}"
+        );
         // A malformed file is never touched.
         assert_eq!(fs::read_to_string(&path).unwrap(), text, "{name}");
     }
@@ -158,7 +176,12 @@ fn ensure_private_dir_leaves_symlinked_leaf_alone() {
     fs::create_dir_all(paths.config_dir().parent().unwrap()).unwrap();
     symlink(&real, paths.config_dir()).unwrap();
     paths.ensure_private_config_dir().unwrap();
-    assert!(fs::symlink_metadata(paths.config_dir()).unwrap().file_type().is_symlink());
+    assert!(
+        fs::symlink_metadata(paths.config_dir())
+            .unwrap()
+            .file_type()
+            .is_symlink()
+    );
     assert_eq!(mode_of(&real), 0o755);
 }
 
@@ -231,10 +254,18 @@ fn write_atomic_preserves_symlinks() {
     let hop = config.join("hop.toml");
     symlink("../dots/models.toml", &hop).unwrap();
     symlink("hop.toml", &link).unwrap();
-    assert_eq!(resolve_write_target(&link).unwrap(), config.join("../dots/models.toml"));
+    assert_eq!(
+        resolve_write_target(&link).unwrap(),
+        config.join("../dots/models.toml")
+    );
 
     save_toml_atomic(&link, &toml::toml! { a = 1 }).unwrap();
-    assert!(fs::symlink_metadata(&link).unwrap().file_type().is_symlink());
+    assert!(
+        fs::symlink_metadata(&link)
+            .unwrap()
+            .file_type()
+            .is_symlink()
+    );
     assert!(fs::symlink_metadata(&hop).unwrap().file_type().is_symlink());
     assert_eq!(fs::read_to_string(&real).unwrap(), "a = 1\n");
     assert_eq!(mode_of(&real), 0o600);
@@ -248,7 +279,12 @@ fn write_atomic_through_dangling_symlink() {
     let target = dir.path().join("dots/private/config.json");
     symlink(&target, &link).unwrap();
     save_json_atomic(&link, &serde_json::json!({"a": 1})).unwrap();
-    assert!(fs::symlink_metadata(&link).unwrap().file_type().is_symlink());
+    assert!(
+        fs::symlink_metadata(&link)
+            .unwrap()
+            .file_type()
+            .is_symlink()
+    );
     assert_eq!(fs::read_to_string(&target).unwrap(), "{\n  \"a\": 1\n}\n");
     assert_eq!(mode_of(&target), 0o644);
 }
@@ -278,17 +314,34 @@ fn toml_and_json_round_trips() {
     let dir = tempfile::tempdir().unwrap();
     let toml_path = dir.path().join("settings.toml");
     assert_eq!(load_toml_optional::<Settings>(&toml_path).unwrap(), None);
-    assert_eq!(load_toml_or_default::<Settings>(&toml_path).unwrap(), Settings::default());
-    let value = Settings { name: "feeds".into(), port: 4610, tags: vec!["a".into()] };
+    assert_eq!(
+        load_toml_or_default::<Settings>(&toml_path).unwrap(),
+        Settings::default()
+    );
+    let value = Settings {
+        name: "feeds".into(),
+        port: 4610,
+        tags: vec!["a".into()],
+    };
     save_toml_atomic(&toml_path, &value).unwrap();
-    assert_eq!(load_toml_optional::<Settings>(&toml_path).unwrap(), Some(value));
+    assert_eq!(
+        load_toml_optional::<Settings>(&toml_path).unwrap(),
+        Some(value)
+    );
 
     let json_path = dir.path().join("settings.json");
     assert_eq!(load_json_optional::<Settings>(&json_path).unwrap(), None);
-    let value = Settings { name: "mesh".into(), port: 1, tags: vec![] };
+    let value = Settings {
+        name: "mesh".into(),
+        port: 1,
+        tags: vec![],
+    };
     save_json_atomic(&json_path, &value).unwrap();
     assert!(fs::read_to_string(&json_path).unwrap().ends_with("}\n"));
-    assert_eq!(load_json_optional::<Settings>(&json_path).unwrap(), Some(value));
+    assert_eq!(
+        load_json_optional::<Settings>(&json_path).unwrap(),
+        Some(value)
+    );
 }
 
 #[cfg(unix)]
@@ -306,7 +359,9 @@ fn type_errors_are_parse_errors_with_location() {
     let path = dir.path().join("settings.toml");
     fs::write(&path, "name = \"x\"\nport = \"not a number\"\n").unwrap();
     let err = load_toml_optional::<Settings>(&path).unwrap_err();
-    let AppConfigError::Parse { line, .. } = err else { panic!("{err}") };
+    let AppConfigError::Parse { line, .. } = err else {
+        panic!("{err}")
+    };
     assert_eq!(line, 2);
 }
 
@@ -316,7 +371,10 @@ fn io_errors_name_the_path() {
     // Reading a directory as a file is an I/O error, not "missing".
     let err = load_toml_optional::<Settings>(dir.path()).unwrap_err();
     assert_eq!(err.code(), "Io");
-    assert!(err.to_string().starts_with(&dir.path().display().to_string()));
+    assert!(
+        err.to_string()
+            .starts_with(&dir.path().display().to_string())
+    );
 }
 
 #[test]
