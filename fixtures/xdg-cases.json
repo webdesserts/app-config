@@ -1,0 +1,312 @@
+{
+  "resolve": [
+    {
+      "name": "defaults when XDG_* unset (launchd)",
+      "app": "autonomy",
+      "env": {
+        "HOME": "/Users/u"
+      },
+      "expect": {
+        "configDir": "/Users/u/.config/autonomy",
+        "dataDir": "/Users/u/.local/share/autonomy",
+        "stateDir": "/Users/u/.local/state/autonomy",
+        "cacheDir": "/Users/u/.cache/autonomy"
+      }
+    },
+    {
+      "name": "absolute XDG_* homes are joined with the app",
+      "app": "feeds",
+      "env": {
+        "HOME": "/h",
+        "XDG_CONFIG_HOME": "/x/config",
+        "XDG_DATA_HOME": "/x/data",
+        "XDG_STATE_HOME": "/x/state",
+        "XDG_CACHE_HOME": "/x/cache"
+      },
+      "expect": {
+        "configDir": "/x/config/feeds",
+        "dataDir": "/x/data/feeds",
+        "stateDir": "/x/state/feeds",
+        "cacheDir": "/x/cache/feeds"
+      }
+    },
+    {
+      "name": "relative and empty XDG_* values are ignored",
+      "app": "notes",
+      "env": {
+        "HOME": "/h",
+        "XDG_CONFIG_HOME": "rel/config",
+        "XDG_DATA_HOME": "./data",
+        "XDG_STATE_HOME": "~/state",
+        "XDG_CACHE_HOME": ""
+      },
+      "expect": {
+        "configDir": "/h/.config/notes",
+        "dataDir": "/h/.local/share/notes",
+        "stateDir": "/h/.local/state/notes",
+        "cacheDir": "/h/.cache/notes"
+      }
+    },
+    {
+      "name": "vendor segment",
+      "app": "mesh",
+      "options": {
+        "vendor": "webdesserts"
+      },
+      "env": {
+        "HOME": "/h"
+      },
+      "expect": {
+        "configDir": "/h/.config/webdesserts/mesh",
+        "dataDir": "/h/.local/share/webdesserts/mesh",
+        "stateDir": "/h/.local/state/webdesserts/mesh",
+        "cacheDir": "/h/.cache/webdesserts/mesh"
+      }
+    },
+    {
+      "name": "vendor segment under XDG_CONFIG_HOME",
+      "app": "mesh",
+      "options": {
+        "vendor": "webdesserts"
+      },
+      "env": {
+        "HOME": "/h",
+        "XDG_CONFIG_HOME": "/x/config"
+      },
+      "expect": {
+        "configDir": "/x/config/webdesserts/mesh",
+        "dataDir": "/h/.local/share/webdesserts/mesh",
+        "stateDir": "/h/.local/state/webdesserts/mesh",
+        "cacheDir": "/h/.cache/webdesserts/mesh"
+      }
+    },
+    {
+      "name": "without envPrefix, app-named env vars are ignored",
+      "app": "autonomy",
+      "env": {
+        "HOME": "/h",
+        "AUTONOMY_STATE_DIR": "/agents/ren/state",
+        "AUTONOMY_CONFIG_DIR": "/o/config",
+        "AUTONOMY_XDG_DATA_DIR": "/o/data"
+      },
+      "expect": {
+        "configDir": "/h/.config/autonomy",
+        "dataDir": "/h/.local/share/autonomy",
+        "stateDir": "/h/.local/state/autonomy",
+        "cacheDir": "/h/.cache/autonomy"
+      }
+    },
+    {
+      "name": "envPrefix overrides are used verbatim and beat XDG_*",
+      "app": "autonomy",
+      "options": {
+        "envPrefix": "AUTONOMY_XDG"
+      },
+      "env": {
+        "HOME": "/h",
+        "AUTONOMY_STATE_DIR": "/agents/ren/state",
+        "AUTONOMY_XDG_CONFIG_DIR": "/o/config",
+        "AUTONOMY_XDG_DATA_DIR": "/o/data",
+        "AUTONOMY_XDG_STATE_DIR": "/o/state",
+        "AUTONOMY_XDG_CACHE_DIR": "/o/cache",
+        "XDG_CONFIG_HOME": "/x/config"
+      },
+      "expect": {
+        "configDir": "/o/config",
+        "dataDir": "/o/data",
+        "stateDir": "/o/state",
+        "cacheDir": "/o/cache"
+      }
+    },
+    {
+      "name": "envPrefix unset, empty or relative falls through to XDG_* then HOME",
+      "app": "feeds",
+      "options": {
+        "envPrefix": "FEEDS"
+      },
+      "env": {
+        "HOME": "/h",
+        "FEEDS_DATA_DIR": "/srv/feeds",
+        "FEEDS_STATE_DIR": "relative/state",
+        "XDG_STATE_HOME": "/x/state",
+        "FEEDS_CACHE_DIR": ""
+      },
+      "expect": {
+        "configDir": "/h/.config/feeds",
+        "dataDir": "/srv/feeds",
+        "stateDir": "/x/state/feeds",
+        "cacheDir": "/h/.cache/feeds"
+      }
+    },
+    {
+      "name": "64-character slug with digits, _ and -",
+      "app": "abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "env": {
+        "HOME": "/h"
+      },
+      "expect": {
+        "configDir": "/h/.config/abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "dataDir": "/h/.local/share/abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "stateDir": "/h/.local/state/abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "cacheDir": "/h/.cache/abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    {
+      "name": "single-letter slug",
+      "app": "a",
+      "options": {
+        "vendor": "my_vendor-2"
+      },
+      "env": {
+        "HOME": "/h"
+      },
+      "expect": {
+        "configDir": "/h/.config/my_vendor-2/a",
+        "dataDir": "/h/.local/share/my_vendor-2/a",
+        "stateDir": "/h/.local/state/my_vendor-2/a",
+        "cacheDir": "/h/.cache/my_vendor-2/a"
+      }
+    },
+    {
+      "name": "uppercase app",
+      "app": "Autonomy",
+      "env": {
+        "HOME": "/h"
+      },
+      "error": "InvalidSlug"
+    },
+    {
+      "name": "empty app",
+      "app": "",
+      "env": {
+        "HOME": "/h"
+      },
+      "error": "InvalidSlug"
+    },
+    {
+      "name": "app with slash",
+      "app": "webdesserts/mesh",
+      "env": {
+        "HOME": "/h"
+      },
+      "error": "InvalidSlug"
+    },
+    {
+      "name": "app with dot",
+      "app": "notes.app",
+      "env": {
+        "HOME": "/h"
+      },
+      "error": "InvalidSlug"
+    },
+    {
+      "name": "app with leading digit",
+      "app": "1app",
+      "env": {
+        "HOME": "/h"
+      },
+      "error": "InvalidSlug"
+    },
+    {
+      "name": "65-character app",
+      "app": "abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "env": {
+        "HOME": "/h"
+      },
+      "error": "InvalidSlug"
+    },
+    {
+      "name": "invalid vendor",
+      "app": "mesh",
+      "options": {
+        "vendor": "Web Desserts"
+      },
+      "env": {
+        "HOME": "/h"
+      },
+      "error": "InvalidSlug"
+    },
+    {
+      "name": "lowercase envPrefix",
+      "app": "autonomy",
+      "options": {
+        "envPrefix": "autonomy_xdg"
+      },
+      "env": {
+        "HOME": "/h"
+      },
+      "error": "InvalidEnvPrefix"
+    },
+    {
+      "name": "envPrefix with dash",
+      "app": "autonomy",
+      "options": {
+        "envPrefix": "AUTONOMY-XDG"
+      },
+      "env": {
+        "HOME": "/h"
+      },
+      "error": "InvalidEnvPrefix"
+    },
+    {
+      "name": "envPrefix with leading digit",
+      "app": "autonomy",
+      "options": {
+        "envPrefix": "1X"
+      },
+      "env": {
+        "HOME": "/h"
+      },
+      "error": "InvalidEnvPrefix"
+    }
+  ],
+  "forTest": [
+    {
+      "name": "hermetic layout under root",
+      "root": "/tmp/t",
+      "app": "autonomy",
+      "expect": {
+        "configDir": "/tmp/t/config/autonomy",
+        "dataDir": "/tmp/t/data/autonomy",
+        "stateDir": "/tmp/t/state/autonomy",
+        "cacheDir": "/tmp/t/cache/autonomy"
+      }
+    },
+    {
+      "name": "invalid app",
+      "root": "/tmp/t",
+      "app": "Bad",
+      "error": "InvalidSlug"
+    }
+  ],
+  "parseErrors": [
+    {
+      "name": "toml missing value",
+      "format": "toml",
+      "text": "name = \"x\"\nport = \n",
+      "line": 2,
+      "column": 8
+    },
+    {
+      "name": "toml unterminated string",
+      "format": "toml",
+      "text": "[server]\nhost = \"abc\n",
+      "line": 2,
+      "column": 12
+    },
+    {
+      "name": "json trailing comma",
+      "format": "json",
+      "text": "{\n  \"a\": 1,\n}\n",
+      "line": 3,
+      "column": 1
+    },
+    {
+      "name": "json missing colon",
+      "format": "json",
+      "text": "{\n  \"a\" 1\n}\n",
+      "line": 2,
+      "column": 7
+    }
+  ]
+}

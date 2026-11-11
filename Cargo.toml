@@ -1,0 +1,19 @@
+[package]
+name = "app-config"
+version = "0.1.0"
+edition = "2024"
+authors = ["Michael Mullins"]
+license = "Apache-2.0"
+repository = "https://github.com/webdesserts/app-config"
+description = "XDG base-directory resolution and symlink-preserving atomic config I/O for webdesserts apps"
+
+[dependencies]
+# Home-directory fallback when `HOME` is unset or relative (mesh already uses `dirs 6`).
+dirs = "6"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+thiserror = "2"
+
+[dev-dependencies]
+tempfile = "3"
